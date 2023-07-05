@@ -34,9 +34,7 @@ for(let i = 0; i < lines.length; i++){
 return null;
 }
     
-export default function Board(){
-    const [xIsNext, setXIsNext] = useState(true);
-    const [squares, setSquares] = useState(Array(9).fill(null)); 
+function Board({xIsNext, squares, onPlay}){
 
     function handleClick(i){
         if(squares[i] || calculateWinner(squares)){return;}
@@ -46,8 +44,7 @@ export default function Board(){
         }else{
             nextSquares[i]="O";
         }
-        setSquares(nextSquares);
-        setXIsNext(!xIsNext);
+        onPlay(nextSquares);
     }
 
     const winner = calculateWinner(squares);
@@ -63,7 +60,7 @@ export default function Board(){
         <>
            <div className="container main_container">
                <h1>{status}</h1>
-               <div className="row">
+            <div className="row">
                     <Square value={squares[0]} onSquareClick={() => handleClick(0)}/>
                     <Square value={squares[1]} onSquareClick={() => handleClick(1)}/>
                     <Square value={squares[2]} onSquareClick={() => handleClick(2)}/>
@@ -83,3 +80,49 @@ export default function Board(){
     );
 }
 
+export default function game(){
+    const [history, setHistory] = useState([Array(9).fill(null)]);
+    const [currentMove, setCurrentMove] = useState(0);
+    const xIsNext = currentMove % 2 === 0;
+    const currentSquares = history[currentMove];
+
+    function handlePlay(nextSquares){
+       const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+       setHistory(nextHistory);
+       setCurrentMove(nextHistory.length - 1);
+    }
+
+    function jumpTo(nextMove){
+       setCurrentMove(nextMove);
+    }
+    
+    const moves = history.map((squares, move) => {
+        let description;
+        if(move > 0){
+            description = "go to move num: " + move;    
+        }else{
+            description = "go to game start";    
+        }
+
+        return(
+            <div className="return-btn">
+                <li className="btn primary-btn" key={move} onClick={() => jumpTo(move)}>{description}</li>
+            </div>
+        );
+    });
+    
+    return(
+        <>
+            <div className="game">
+                <div className="game-board">
+                   <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay}/> 
+                </div>
+                <div className="game-info">
+                    <ol>
+                        {moves}
+                    </ol>
+                </div>
+            </div>
+        </>
+    );
+}
